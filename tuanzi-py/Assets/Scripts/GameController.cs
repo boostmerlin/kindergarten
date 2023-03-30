@@ -10,7 +10,6 @@ public class GameController : MonoBehaviour
     private UIController uIController;
 
     private DataModel dataModel;
-    // Start is called before the first frame update
 
     public GameObject subTypeRoot;
 
@@ -23,6 +22,8 @@ public class GameController : MonoBehaviour
     public GameObject cover;
 
     public GameObject toneRoot;
+
+    public GameObject playButton;
 
     void Awake()
     {
@@ -95,7 +96,7 @@ public class GameController : MonoBehaviour
         return null;
     }
 
-    Nullable<PyElement> FindPrev(string name)
+    PyElement? FindPrev(string name)
     {
         PyElement? pre = null;
         foreach (var pyType in MapTypes())
@@ -120,38 +121,53 @@ public class GameController : MonoBehaviour
 
     void OnGUI()
     {
-        if (Input.anyKeyDown)
+        if (!Input.anyKeyDown)
         {
-            Event e = Event.current;
-            if (e.keyCode == KeyCode.None || e.rawType != EventType.KeyDown)
-            {
-                return;
-            }
-            if (e.isKey && e.keyCode >= KeyCode.A && e.keyCode <= KeyCode.Z)
-            {
+            return;
+        }
+        Event e = Event.current;
+        if (e.keyCode == KeyCode.None || e.rawType != EventType.KeyDown)
+        {
+            return;
+        }
+        switch (e.keyCode)
+        {
+            case KeyCode k when k >= KeyCode.A && k <= KeyCode.Z:
                 string a = ((char)e.keyCode).ToString();
                 var d = FindData(a);
                 if (d != null)
                 {
                     SetSelect(d.Value);
                 }
-            }
-            else if (e.keyCode == KeyCode.RightArrow) 
-            {
-                var d = FindNext(currentSelect.name);
+                break;
+            case KeyCode.RightArrow:
+                d = FindNext(currentSelect.name);
                 if (d.HasValue)
                 {
                     SetSelect(d.Value);
                 }
-            }
-            else if (e.keyCode == KeyCode.LeftArrow)
-            {
-                var d = FindPrev(currentSelect.name);
+                break;
+            case KeyCode.LeftArrow:
+                d = FindPrev(currentSelect.name);
                 if (d.HasValue)
                 {
                     SetSelect(d.Value);
                 }
-            }
+                break;
+            case KeyCode.Space:
+                if (cover.activeSelf)
+                {
+                    break;
+                }
+                if (videoPlayer.isPlaying)
+                {
+                    PauseVideo();
+                }
+                else
+                {
+                    ResumeVideo();
+                }
+                break;
         }
     }
 
@@ -209,6 +225,7 @@ public class GameController : MonoBehaviour
                 Destroy(t.gameObject);
             }
         }
+        ClearOutRenderTexture(videoPlayer.targetTexture);
     }
 
     void SetSelect(PyElement pyData)
@@ -244,9 +261,22 @@ public class GameController : MonoBehaviour
         RenderTexture.active = rt;
 
         cover.SetActive(true);
+        playButton.SetActive(false);
     }
 
-    void PlayPyVideo(PyElement pyData, bool play = true)
+    public void ResumeVideo()
+    {
+        videoPlayer.Play();
+        playButton.SetActive(false);
+    }
+
+    private void PauseVideo()
+    {
+        videoPlayer.Pause();
+        playButton.SetActive(true);
+    }
+
+    void PlayPyVideo(PyElement pyData)
     {
         if (currentSelect == pyData)
         {
@@ -260,14 +290,7 @@ public class GameController : MonoBehaviour
             return;
         }
         videoPlayer.clip = vc;
-        if (play)
-        {
-            videoPlayer.Play();
-        }
-        else
-        {
-            ClearOutRenderTexture(videoPlayer.targetTexture);
-        }
+        ResumeVideo();
         currentSelect = pyData;
     }
 }
