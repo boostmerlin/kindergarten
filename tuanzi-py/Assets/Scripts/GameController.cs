@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Xml.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.UI.Extensions;
@@ -57,14 +59,15 @@ public class GameController : MonoBehaviour
     {
         foreach (var pyType in MapTypes())
         {
-            if (dataModel.PyDatas.ContainsKey(pyType))
+            if (!dataModel.PyDatas.ContainsKey(pyType))
             {
-                foreach (var pyData in dataModel.PyDatas[pyType])
+                continue;
+            }
+            foreach (var pyData in dataModel.PyDatas[pyType])
+            {
+                if (pyData.name == name)
                 {
-                    if (pyData.name == name)
-                    {
-                        return pyData;
-                    }
+                    return pyData;
                 }
             }
         }
@@ -76,20 +79,19 @@ public class GameController : MonoBehaviour
         int flag = 1;
         foreach (var pyType in MapTypes())
         {
-            if (dataModel.PyDatas.ContainsKey(pyType))
+            if (!dataModel.PyDatas.ContainsKey(pyType))
             {
-                foreach (var pyData in dataModel.PyDatas[pyType])
+                continue;
+            }
+            foreach (var pyData in dataModel.PyDatas[pyType])
+            {
+                if (flag == 0)
                 {
-                    if (flag == 0)
-                    {
-                        Debug.Log(pyData);
-                        return pyData;
-                    }
-                    if (pyData.name == name)
-                    {
-                        Debug.Log(name);
-                        flag--;
-                    }
+                    return pyData;
+                }
+                if (pyData.name == name)
+                {
+                    flag--;
                 }
             }
         }
@@ -101,18 +103,19 @@ public class GameController : MonoBehaviour
         PyElement? pre = null;
         foreach (var pyType in MapTypes())
         {
-            if (dataModel.PyDatas.ContainsKey(pyType))
+            if (!dataModel.PyDatas.ContainsKey(pyType))
             {
-                foreach (var pyData in dataModel.PyDatas[pyType])
+                continue;
+            }
+            foreach (var pyData in dataModel.PyDatas[pyType])
+            {
+                if (pyData.name == name)
                 {
-                    if (pyData.name == name)
-                    {
-                        return pre;
-                    }
-                    else
-                    {
-                        pre = pyData;
-                    }
+                    return pre;
+                }
+                else
+                {
+                    pre = pyData;
                 }
             }
         }
@@ -168,6 +171,21 @@ public class GameController : MonoBehaviour
                     ResumeVideo();
                 }
                 break;
+            case KeyCode k when k >= KeyCode.Alpha1 && k <= KeyCode.Alpha4:
+                if (toneRoot.activeSelf)
+                {
+                    PlayTone(k - KeyCode.Alpha1);
+                }
+                break;
+        }
+    }
+
+    private void PlayTone(int tone)
+    {
+        List<PyElement> tones;
+        if (dataModel.PyTone.TryGetValue(currentSelect, out tones))
+        {
+            PlayPyVideo(tones[tone]);
         }
     }
 
@@ -230,9 +248,12 @@ public class GameController : MonoBehaviour
 
     void SetSelect(PyElement pyData)
     {
+        if (currentSelect == pyData)
+        {
+            return;
+        }
         Debug.Log("py click: " + pyData);
         PlayPyVideo(pyData);
-
         //如果有声调，显示声调
         List<PyElement> tones;
         if (dataModel.PyTone.TryGetValue(pyData, out tones))
@@ -251,6 +272,7 @@ public class GameController : MonoBehaviour
         {
             toneRoot.SetActive(false);
         }
+        currentSelect = pyData;
     }
 
     private void ClearOutRenderTexture(RenderTexture renderTexture)
@@ -278,10 +300,6 @@ public class GameController : MonoBehaviour
 
     void PlayPyVideo(PyElement pyData)
     {
-        if (currentSelect == pyData)
-        {
-            return;
-        }
         cover.SetActive(false);
         VideoClip vc = Resources.Load<VideoClip>(pyData.Uri);
         if (vc == null)
@@ -291,6 +309,5 @@ public class GameController : MonoBehaviour
         }
         videoPlayer.clip = vc;
         ResumeVideo();
-        currentSelect = pyData;
     }
 }

@@ -6,10 +6,10 @@ using System.Collections.Generic;
 
 public class DataModel : MonoBehaviour
 {
-    private const string SQL_DB_NAME = "pinyin";
+    private const string SQL_DB_NAME = "kindergarten";
 
     // table name
-    private const string SQL_TABLE_NAME = "qywh_pinyin";
+    private const string SQL_TABLE_NAME = "pinyin";
     private IDbConnection _connection = null;
 
     internal Dictionary<PyType, List<PyElement>> PyDatas { get; set; } = new Dictionary<PyType, List<PyElement>>();
