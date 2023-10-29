@@ -21,8 +21,8 @@ public class UIController : MonoBehaviour
 
     void ShowMenu()
     {
-        MainMenu.SetActive(true);
-        var r = MainMenu.GetComponent<RectTransform>();
+       MainMenu.SetActive(true);
+       var r = MainMenu.GetComponent<RectTransform>();
        var t = DOTween.To(() => -1200, x => r.anchoredPosition = new Vector2(x, r.anchoredPosition.y), 0, 0.8f);
         t.SetTarget(r);
         

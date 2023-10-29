@@ -1,3 +1,5 @@
+using DG.Tweening;
+using DG.Tweening.Core;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -185,8 +187,36 @@ public class GameController : MonoBehaviour
         List<PyElement> tones;
         if (dataModel.PyTone.TryGetValue(currentSelect, out tones))
         {
+            Button button = FindButtonOnRoot(toneRoot.transform, tones[tone]);
+            button.Select();
             PlayPyVideo(tones[tone]);
         }
+    }
+
+    Button FindButtonOnRoot(Transform root, PyElement element)
+    {
+        foreach (var button in root.GetComponentsInChildren<Button>())
+        {
+            var text = button.GetComponentInChildren<Text>();
+            if (text != null && text.text == element.spell)
+            {
+                return button;
+            }
+        }
+        return null;
+    }
+
+    void SetButtonColor(Button button, Color targetColor)
+    {
+        var cb = button.colors;
+        DOSetter<Color> setter = delegate (Color color)
+        {
+            cb.selectedColor = color;
+            cb.normalColor = color;
+            button.colors = cb;
+        };
+        var tween = DOTween.To(() => cb.normalColor, setter, targetColor, 1.0f); ;
+        tween.PlayForward();
     }
 
     private void OnEnable()
@@ -264,13 +294,33 @@ public class GameController : MonoBehaviour
                 var d = tones[i];
                 t.GetComponentInChildren<Text>().text = d.spell;
                 t.GetComponent<Button>().onClick.RemoveAllListeners();
-                t.GetComponent<Button>().onClick.AddListener(() => PlayPyVideo(d));
+                int index = i;
+                t.GetComponent<Button>().onClick.AddListener(() => PlayTone(index));
+                if (i == 0)
+                {
+                    t.GetComponent<Button>().Select();
+                }
             }
             toneRoot.SetActive(true);
         }
         else
         {
             toneRoot.SetActive(false);
+        }
+
+        if (currentSelect != null)
+        {
+            Button lastButton = FindButtonOnRoot(subTypeRoot.transform.parent, currentSelect);
+            if (lastButton != null)
+            {
+                SetButtonColor(lastButton, Color.white);
+            }
+        }
+        Button button = FindButtonOnRoot(subTypeRoot.transform.parent, pyData);
+        if (button != null)
+        {
+            //button.Select();
+            SetButtonColor(button, Color.red);
         }
         currentSelect = pyData;
     }
